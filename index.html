@@ -29,7 +29,7 @@
     <div id="folder-section">
       <label class="section-label">📁 Mod 資料夾路徑</label>
       <div id="folder-input-group">
-        <input type="text" id="folder-path" placeholder="點擊「瀏覽」選擇資料夾..." readonly>
+        <input type="text" id="folder-path" placeholder="點擊「瀏覽」選擇或直接貼上路徑..." oninput="handlePathInput()">
         <button id="btn-browse" class="btn btn-accent" onclick="browseFolder()">瀏覽</button>
         <button id="btn-scan" class="btn btn-primary" onclick="scanFolder()" disabled>掃描</button>
         <button id="btn-stop" class="btn btn-danger" onclick="stopScan()" style="display:none;">停止</button>
@@ -61,7 +61,11 @@
       <div id="stats">
         <span id="stats-text">就緒</span>
       </div>
-      <div id="action-buttons">
+      <div id="action-buttons" style="display: flex; gap: 8px; align-items: center;">
+        <select id="global-backup-mode" class="backup-select" style="display:none; height: 34px; padding: 0 12px; font-size: 12px;" onchange="applyGlobalBackupSelection()">
+          <option value="newest">批次：全部選最新</option>
+          <option value="oldest">批次：全部選最舊</option>
+        </select>
         <button id="btn-select-all" class="btn btn-secondary" onclick="toggleSelectAll()" disabled>全選</button>
         <button id="btn-revert" class="btn btn-danger" onclick="revertSelected()" disabled>
           <span class="btn-icon">↩</span> Revert

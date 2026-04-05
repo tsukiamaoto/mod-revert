@@ -42,6 +42,12 @@ async function browseFolder() {
   }
 }
 
+// ─── Handle Manual Path Input ───────────────────────────────
+function handlePathInput() {
+  const pathInput = document.getElementById('folder-path').value.trim();
+  document.getElementById('btn-scan').disabled = pathInput.length === 0;
+}
+
 // ─── Scan Folder ────────────────────────────────────────────
 async function scanFolder() {
   const folderPath = document.getElementById('folder-path').value;
@@ -77,12 +83,15 @@ async function scanFolder() {
       addLog('未找到任何包含備份檔案的 mod.ini', 'warning');
       showPlaceholder('未找到可還原的 mod.ini 項目');
       document.getElementById('stats-text').textContent = '未找到項目';
+      document.getElementById('global-backup-mode').style.display = 'none';
     } else {
       addLog(`掃描完成！找到 ${scanResults.length} 個可還原項目`, 'success');
       renderResults(scanResults);
       document.getElementById('stats-text').textContent = `找到 ${scanResults.length} 個項目`;
       document.getElementById('btn-select-all').disabled = false;
       document.getElementById('btn-revert').disabled = false;
+      document.getElementById('global-backup-mode').style.display = 'inline-block';
+      document.getElementById('global-backup-mode').value = 'newest';
     }
   } catch (err) {
     addLog(`掃描失敗: ${err.message}`, 'error');
@@ -92,6 +101,29 @@ async function scanFolder() {
     btnStop.style.display = 'none';
     btnBrowse.disabled = false;
   }
+}
+
+// ─── Global Backup Selection ────────────────────────────────
+function applyGlobalBackupSelection() {
+  if (scanResults.length === 0) return;
+  const mode = document.getElementById('global-backup-mode').value;
+  
+  scanResults.forEach((item, index) => {
+    if (item.backups.length > 1) {
+      if (mode === 'oldest') {
+        item.selectedBackup = item.backups[item.backups.length - 1];
+      } else {
+        item.selectedBackup = item.backups[0];
+      }
+      
+      const selectEl = document.querySelector(`.backup-select[data-index="${index}"]`);
+      if (selectEl) {
+        selectEl.value = item.selectedBackup;
+      }
+    }
+  });
+
+  addLog(`已切換全部選項至: ${mode === 'oldest' ? '最舊' : '最新'}備份`, 'info');
 }
 
 // ─── Stop Scan ──────────────────────────────────────────────

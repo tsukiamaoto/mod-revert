@@ -76,18 +76,29 @@ ipcMain.handle('scan-folder', async (event, folderPath) => {
       const hasModIni = files.some(f => f.toLowerCase() === 'mod.ini');
 
       if (hasModIni) {
-        // Find backup files - files containing 'bak' in their name (case insensitive)
-        const backupFiles = files.filter(f => {
+        // Find backup files specifically related to mod.ini
+        let backupFiles = files.filter(f => {
           const lower = f.toLowerCase();
-          return lower !== 'mod.ini' && (
+          return lower !== 'mod.ini' && lower.startsWith('mod.ini') && (
             lower.includes('bak') ||
             lower.includes('backup') ||
             lower.includes('.orig') ||
-            lower.endsWith('.old')
+            lower.includes('.old')
           );
         });
 
         if (backupFiles.length > 0) {
+          // Sort backups by modification time (newest first)
+          backupFiles.sort((a, b) => {
+            try {
+              const statA = fs.statSync(path.join(dir, a));
+              const statB = fs.statSync(path.join(dir, b));
+              return statB.mtimeMs - statA.mtimeMs;
+            } catch (e) {
+              return 0;
+            }
+          });
+
           results.push({
             folder: dir,
             modIni: 'mod.ini',
