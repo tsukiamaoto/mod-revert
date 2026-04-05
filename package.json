@@ -12,6 +12,7 @@
   "build": {
     "productName": "Mod Revert Tool",
     "appId": "com.tsukiamaoto.modrevert",
+    "icon": "icon.png",
     "win": {
       "target": ["nsis", "portable"]
     },
