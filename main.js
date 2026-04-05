@@ -95,46 +95,37 @@ ipcMain.handle('scan-folder', async (event, folderPath) => {
             modIniBuffer = fs.readFileSync(modIniPath);
           } catch (e) {}
 
-          // Filter out backups that are exactly identical to the current mod.ini
-          if (modIniBuffer) {
-            backupFiles = backupFiles.filter(b => {
-              try {
-                const bPath = path.join(dir, b);
-                const statMod = fs.statSync(modIniPath);
-                const statB = fs.statSync(bPath);
-                
-                // Fast path: if sizes differ, they are definitely different
-                if (statMod.size !== statB.size) return true;
-                
-                // Deep comparison
-                const bBuffer = fs.readFileSync(bPath);
-                return !modIniBuffer.equals(bBuffer); // keep if NOT equal
-              } catch (e) {
-                return true; // keep if we get permission/read errors
-              }
-            });
-          }
-
-          if (backupFiles.length > 0) {
-            // Sort backups by modification time (newest first)
-          backupFiles.sort((a, b) => {
+          const backupsData = backupFiles.map(b => {
+            let identical = false;
+            let mtime = 0;
             try {
-              const statA = fs.statSync(path.join(dir, a));
-              const statB = fs.statSync(path.join(dir, b));
-              return statB.mtimeMs - statA.mtimeMs;
-            } catch (e) {
-              return 0;
-            }
+              const bPath = path.join(dir, b);
+              const statB = fs.statSync(bPath);
+              mtime = statB.mtimeMs;
+              
+              if (modIniBuffer) {
+                const statMod = fs.statSync(modIniPath);
+                // Fast path: if sizes differ, they are definitely different
+                if (statMod.size === statB.size) {
+                  // Deep comparison
+                  const bBuffer = fs.readFileSync(bPath);
+                  identical = modIniBuffer.equals(bBuffer);
+                }
+              }
+            } catch (e) {}
+            return { name: b, isIdentical: identical, mtimeMs: mtime };
           });
+
+          // Sort backups by modification time (newest first)
+          backupsData.sort((a, b) => b.mtimeMs - a.mtimeMs);
 
           results.push({
             folder: dir,
             modIni: 'mod.ini',
-            backups: backupFiles
+            backups: backupsData
           });
         }
-      } // Close the outer backupFiles.length > 0 check
-    } // Close the hasModIni block
+      } // Close the outer hasModIni check
     
     // Recurse into subdirectories
       for (const entry of entries) {
@@ -159,8 +150,8 @@ ipcMain.handle('revert-mods', async (event, items) => {
 
   for (const item of items) {
     const modIniPath = path.join(item.folder, 'mod.ini');
-    // Pick the first backup file by default
-    const backupFile = item.selectedBackup || item.backups[0];
+    // Pick the selected backup file, or fallback
+    const backupFile = item.selectedBackup || item.backups[0].name;
     const backupPath = path.join(item.folder, backupFile);
 
     try {

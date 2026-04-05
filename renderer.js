@@ -111,14 +111,15 @@ function applyGlobalBackupSelection() {
   scanResults.forEach((item, index) => {
     if (item.backups.length > 1) {
       if (mode === 'oldest') {
-        item.selectedBackup = item.backups[item.backups.length - 1];
+        item.selectedBackup = item.backups[item.backups.length - 1].name;
       } else {
-        item.selectedBackup = item.backups[0];
+        item.selectedBackup = item.backups[0].name;
       }
       
       const selectEl = document.querySelector(`.backup-select[data-index="${index}"]`);
       if (selectEl) {
         selectEl.value = item.selectedBackup;
+        updateSelectedBackup(index, item.selectedBackup); // Trigger re-evaluation
       }
     }
   });
@@ -153,15 +154,30 @@ function renderResults(results) {
       : item.folder;
 
     let backupSelector = '';
-    if (item.backups.length === 1) {
-      backupSelector = `<span class="result-backup-name">${item.backups[0]}</span>`;
-    } else {
-      const options = item.backups.map(b => `<option value="${b}">${b}</option>`).join('');
+    const hasMultiple = item.backups.length > 1;
+
+    // Find the first non-identical backup, or default to the newest one
+    const nonIdentical = item.backups.find(b => !b.isIdentical);
+    const defaultSelected = nonIdentical || item.backups[0];
+    item.selectedBackup = defaultSelected.name;
+
+    if (hasMultiple) {
+      const options = item.backups.map(b => {
+        const flag = b.isIdentical ? ' [已套用]' : '';
+        const selectedAttr = b.name === defaultSelected.name ? 'selected' : '';
+        return `<option value="${b.name}" ${selectedAttr}>${b.name}${flag}</option>`;
+      }).join('');
       backupSelector = `<select class="backup-select" data-index="${index}" onchange="updateSelectedBackup(${index}, this.value)">${options}</select>`;
+    } else {
+      const flag = item.backups[0].isIdentical ? ' <span style="color:var(--text-muted); font-size:10px;">[已套用]</span>' : '';
+      backupSelector = `<span class="result-backup-name">${item.backups[0].name}</span>${flag}`;
     }
 
+    const disableCheckbox = defaultSelected.isIdentical;
+    const isChecked = !disableCheckbox;
+
     div.innerHTML = `
-      <input type="checkbox" class="result-checkbox" data-index="${index}" checked onchange="updateStats()">
+      <input type="checkbox" class="result-checkbox" data-index="${index}" ${isChecked ? 'checked' : ''} ${disableCheckbox ? 'disabled' : ''} onchange="updateStats()">
       <div class="result-info">
         <div class="result-folder" title="${item.folder}">${shortFolder}</div>
         <div class="result-backup">備份: ${backupSelector}</div>
@@ -169,9 +185,6 @@ function renderResults(results) {
     `;
 
     list.appendChild(div);
-
-    // Set default selected backup
-    item.selectedBackup = item.backups[0];
   });
 
   allSelected = true;
@@ -189,13 +202,30 @@ function showPlaceholder(msg) {
 // ─── Update Selected Backup ─────────────────────────────────
 function updateSelectedBackup(index, value) {
   scanResults[index].selectedBackup = value;
+  
+  // Re-evaluate checkbox disabling based on selection
+  const currentBackup = scanResults[index].backups.find(b => b.name === value);
+  const cb = document.querySelector(`.result-checkbox[data-index="${index}"]`);
+  
+  if (cb && currentBackup) {
+    if (currentBackup.isIdentical) {
+      cb.checked = false;
+      cb.disabled = true;
+    } else {
+      cb.disabled = false;
+      cb.checked = true;
+    }
+    updateStats();
+  }
 }
 
 // ─── Toggle Select All ─────────────────────────────────────
 function toggleSelectAll() {
   allSelected = !allSelected;
   const checkboxes = document.querySelectorAll('.result-checkbox');
-  checkboxes.forEach(cb => cb.checked = allSelected);
+  checkboxes.forEach(cb => {
+    if (!cb.disabled) cb.checked = allSelected;
+  });
   document.getElementById('btn-select-all').textContent = allSelected ? '取消全選' : '全選';
   updateStats();
 }
