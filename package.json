@@ -13,6 +13,7 @@
     "productName": "Mod Revert Tool",
     "appId": "com.tsukiamaoto.modrevert",
     "icon": "icon.png",
+    "compression": "maximum",
     "win": {
       "target": ["nsis", "portable"]
     },
