@@ -138,3 +138,9 @@ dist
 ehthumbs.db
 Thumbs.db
 Desktop.ini
+
+# Electron build output directories
+release/
+dist/
+build/
+
