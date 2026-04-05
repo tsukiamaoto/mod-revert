@@ -88,7 +88,35 @@ ipcMain.handle('scan-folder', async (event, folderPath) => {
         });
 
         if (backupFiles.length > 0) {
-          // Sort backups by modification time (newest first)
+          // Read mod.ini content once for comparison
+          const modIniPath = path.join(dir, 'mod.ini');
+          let modIniBuffer = null;
+          try {
+            modIniBuffer = fs.readFileSync(modIniPath);
+          } catch (e) {}
+
+          // Filter out backups that are exactly identical to the current mod.ini
+          if (modIniBuffer) {
+            backupFiles = backupFiles.filter(b => {
+              try {
+                const bPath = path.join(dir, b);
+                const statMod = fs.statSync(modIniPath);
+                const statB = fs.statSync(bPath);
+                
+                // Fast path: if sizes differ, they are definitely different
+                if (statMod.size !== statB.size) return true;
+                
+                // Deep comparison
+                const bBuffer = fs.readFileSync(bPath);
+                return !modIniBuffer.equals(bBuffer); // keep if NOT equal
+              } catch (e) {
+                return true; // keep if we get permission/read errors
+              }
+            });
+          }
+
+          if (backupFiles.length > 0) {
+            // Sort backups by modification time (newest first)
           backupFiles.sort((a, b) => {
             try {
               const statA = fs.statSync(path.join(dir, a));
@@ -105,9 +133,10 @@ ipcMain.handle('scan-folder', async (event, folderPath) => {
             backups: backupFiles
           });
         }
-      }
-
-      // Recurse into subdirectories
+      } // Close the outer backupFiles.length > 0 check
+    } // Close the hasModIni block
+    
+    // Recurse into subdirectories
       for (const entry of entries) {
         if (cancelScanFlag) return;
         if (entry.isDirectory()) {
