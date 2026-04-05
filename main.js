@@ -34,11 +34,21 @@ app.on('window-all-closed', () => {
 // ─── IPC Handlers ─────────────────────────────────────────
 
 // Open folder dialog
-ipcMain.handle('select-folder', async () => {
-  const result = await dialog.showOpenDialog(mainWindow, {
+ipcMain.handle('select-folder', async (event, defaultPath) => {
+  const options = {
     properties: ['openDirectory'],
     title: '選擇 Mod 資料夾'
-  });
+  };
+  
+  if (defaultPath) {
+    try { // Check if the path exists to avoid dialog errors
+      if (fs.existsSync(defaultPath)) {
+        options.defaultPath = defaultPath;
+      }
+    } catch (e) {}
+  }
+
+  const result = await dialog.showOpenDialog(mainWindow, options);
   if (result.canceled) return null;
   return result.filePaths[0];
 });

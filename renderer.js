@@ -34,7 +34,8 @@ function clearLog() {
 
 // ─── Browse Folder ──────────────────────────────────────────
 async function browseFolder() {
-  const folderPath = await window.electronAPI.selectFolder();
+  const currentPath = document.getElementById('folder-path').value.trim();
+  const folderPath = await window.electronAPI.selectFolder(currentPath);
   if (folderPath) {
     document.getElementById('folder-path').value = folderPath;
     document.getElementById('btn-scan').disabled = false;
