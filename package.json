@@ -1,0 +1,16 @@
+{
+  "name": "mod-revert",
+  "version": "1.0.0",
+  "description": "Mod INI Revert Tool - Restore mod.ini from backup files",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^35.2.1"
+  }
+}

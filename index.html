@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mod Revert Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Custom Titlebar -->
+  <div id="titlebar">
+    <div id="titlebar-drag">
+      <span class="titlebar-icon">⚙</span>
+      <span class="titlebar-text">Mod Revert Tool</span>
+    </div>
+    <div id="titlebar-controls">
+      <button id="btn-minimize" class="titlebar-btn" onclick="electronAPI.minimizeWindow()">─</button>
+      <button id="btn-maximize" class="titlebar-btn" onclick="electronAPI.maximizeWindow()">☐</button>
+      <button id="btn-close" class="titlebar-btn close-btn" onclick="electronAPI.closeWindow()">✕</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="app">
+    <!-- Background Image -->
+    <div id="bg-overlay"></div>
+
+    <!-- Folder Selection -->
+    <div id="folder-section">
+      <label class="section-label">📁 Mod 資料夾路徑</label>
+      <div id="folder-input-group">
+        <input type="text" id="folder-path" placeholder="點擊「瀏覽」選擇資料夾..." readonly>
+        <button id="btn-browse" class="btn btn-accent" onclick="browseFolder()">瀏覽</button>
+        <button id="btn-scan" class="btn btn-primary" onclick="scanFolder()" disabled>掃描</button>
+        <button id="btn-stop" class="btn btn-danger" onclick="stopScan()" style="display:none;">停止</button>
+      </div>
+    </div>
+
+    <!-- Scan Results -->
+    <div id="results-section">
+      <label class="section-label">📋 掃描結果</label>
+      <div id="results-container">
+        <div id="results-placeholder">
+          <span class="placeholder-icon">🔍</span>
+          <span>請先選擇資料夾並點擊「掃描」</span>
+        </div>
+        <div id="results-list" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Log Area -->
+    <div id="log-section">
+      <label class="section-label">Log</label>
+      <div id="log-container">
+        <div id="log-content"></div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-bar">
+      <div id="stats">
+        <span id="stats-text">就緒</span>
+      </div>
+      <div id="action-buttons">
+        <button id="btn-select-all" class="btn btn-secondary" onclick="toggleSelectAll()" disabled>全選</button>
+        <button id="btn-revert" class="btn btn-danger" onclick="revertSelected()" disabled>
+          <span class="btn-icon">↩</span> Revert
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
